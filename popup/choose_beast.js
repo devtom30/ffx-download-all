@@ -33,13 +33,13 @@ function listenForClicks() {
      * send a "beastify" message to the content script in the active tab.
      */
     function beastify(tabs) {
-      browser.tabs.insertCSS({code: hidePage}).then(() => {
+      // browser.tabs.insertCSS({code: hidePage}).then(() => {
         const url = beastNameToURL(e.target.textContent);
         browser.tabs.sendMessage(tabs[0].id, {
-          command: "beastify",
-          beastURL: url
+          command: "login",
+          password: ""
         });
-      });
+     // });
     }
 
     /**

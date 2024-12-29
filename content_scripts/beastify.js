@@ -38,10 +38,22 @@
    * Call "beastify()" or "reset()".
    */
   browser.runtime.onMessage.addListener((message) => {
-    if (message.command === "beastify") {
-      insertBeast(message.beastURL);
+    if (message.command === "login") {
+      let inputs = document.getElementsByTagName("input");
+      /*Array.of(inputs).forEach(
+        input => {
+          if (input.type === "password") {
+            console.log(input.type);
+          } else {
+            console.log(input);
+          }
+          input.value = message.password;
+        }
+      );*/
+      inputs[0].value = message.password;
+      document.getElementsByTagName("form")[0].submit();
     } else if (message.command === "reset") {
-      removeExistingBeasts();
+
     }
   });
 
