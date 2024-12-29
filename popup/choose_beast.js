@@ -34,12 +34,15 @@ function listenForClicks() {
      */
     function beastify(tabs) {
       // browser.tabs.insertCSS({code: hidePage}).then(() => {
+      browser.storage.local.get("password").then((obj) => {
+        console.log("obj");
+        console.log(obj);
         const url = beastNameToURL(e.target.textContent);
         browser.tabs.sendMessage(tabs[0].id, {
           command: "login",
-          password: ""
+          password: obj.password
         });
-     // });
+      })
     }
 
     /**
