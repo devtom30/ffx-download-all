@@ -63,7 +63,12 @@
       console.log(items);
       let itemsContent = items.getElementsByClassName("browserItemCONTENT");
       let buttons = itemsContent[0].getElementsByClassName("browserItemButtonView");
-      console.log("href is : " + buttons[0].getAttribute("href"));
+      let url = buttons[0].getAttribute("href");
+      console.log("href is : " + url);
+      browser.runtime.sendMessage({
+        action: "open-page",
+        url: url
+      });
     }
   });
 
