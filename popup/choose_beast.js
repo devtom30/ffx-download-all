@@ -27,22 +27,39 @@ function listenForClicks() {
       }
     }
 
+    function buttonNameToCommand(buttonName) {
+      switch (buttonName) {
+        case "Login":
+          return "login";
+        case "Open preview":
+          return "open-preview";
+      }
+    }
+
     /**
      * Insert the page-hiding CSS into the active tab,
      * then get the beast URL and
      * send a "beastify" message to the content script in the active tab.
      */
     function beastify(tabs) {
-      // browser.tabs.insertCSS({code: hidePage}).then(() => {
-      browser.storage.local.get("password").then((obj) => {
-        console.log("obj");
-        console.log(obj);
-        const url = beastNameToURL(e.target.textContent);
-        browser.tabs.sendMessage(tabs[0].id, {
-          command: "login",
-          password: obj.password
-        });
-      })
+      const action = buttonNameToCommand(e.target.textContent);
+      switch (action) {
+        case "login":
+          browser.storage.local.get("password").then((obj) => {
+            console.log("obj");
+            console.log(obj);
+            browser.tabs.sendMessage(tabs[0].id, {
+              command: action,
+              password: obj.password
+            });
+          });
+          break;
+        case "open-preview":
+          browser.tabs.sendMessage(tabs[0].id, {
+            command: action
+          });
+          break;
+      }
     }
 
     /**

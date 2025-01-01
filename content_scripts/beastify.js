@@ -50,10 +50,20 @@
           input.value = message.password;
         }
       );*/
-      inputs[0].value = message.password;
-      document.getElementsByTagName("form")[0].submit();
+      let input = inputs[0];
+      if (input.name === "password"
+      && window.location.href.includes("benvenuti")) {
+        inputs[0].value = message.password;
+        document.getElementsByTagName("form")[0].submit();
+      }
     } else if (message.command === "reset") {
 
+    } else if (message.command === "open-preview") {
+      let items = document.getElementById("browserItemsContentSortable");
+      console.log(items);
+      let itemsContent = items.getElementsByClassName("browserItemCONTENT");
+      let buttons = itemsContent[0].getElementsByClassName("browserItemButtonView");
+      console.log("href is : " + buttons[0].getAttribute("href"));
     }
   });
 
