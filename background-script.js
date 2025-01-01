@@ -7,8 +7,18 @@ browser.runtime.onInstalled.addListener(() => {
     console.log("Installed");
 });
 
+const makeItGreen = 'document.body.style.border = "5px solid green"';
+
 let onCreated = (tab) => {
-    console.log("created tab " + tab);
+    console.log("created tab ");
+    console.log(tab);
+    let executing = browser.tabs.executeScript(
+        tab.id,
+        {
+            code: makeItGreen
+        }
+    )
+
 }
 let onError = (error) => {
     console.log("error on creating tab " + error);

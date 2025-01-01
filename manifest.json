@@ -11,7 +11,9 @@
 
   "permissions": [
     "activeTab",
-    "storage"
+    "tabs",
+    "storage",
+    "<all_urls>"
   ],
 
   "browser_action": {
