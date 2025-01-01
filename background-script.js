@@ -15,7 +15,7 @@ let onCreated = (tab) => {
     let executing = browser.tabs.executeScript(
         tab.id,
         {
-            code: makeItGreen
+            file: "/lib/in-tab.js"
         }
     )
 
