@@ -39,5 +39,12 @@
     "scripts": ["background-script.js"],
     "persistent": false,
     "type": "module"
+  },
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "ffx-download-all@devtom.org",
+      "strict_min_version": "133"
+    }
   }
 }

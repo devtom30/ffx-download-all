@@ -4,8 +4,8 @@ async function saveOptions(e) {
         password: document.querySelector("#password").value
     });
     console.log("Saved");
-    let pass = await browser.storage.local.get('password');
-    console.log(pass);
+    let res = await browser.storage.local.get('password');
+    console.log(res.password);
 }
 
 async function restoreOptions() {
