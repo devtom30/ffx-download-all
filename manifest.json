@@ -15,7 +15,8 @@
     "activeTab",
     "tabs",
     "storage",
-    "nativeMessaging"
+    "nativeMessaging",
+    "scripting"
   ],
 
   "action": {

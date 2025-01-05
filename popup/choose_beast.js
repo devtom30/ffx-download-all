@@ -19,11 +19,11 @@ function listenForClicks() {
     function beastNameToURL(beastName) {
       switch (beastName) {
         case "Frog":
-          return browser.runtime.getURL("beasts/frog.jpg");
+          return chrome.runtime.getURL("beasts/frog.jpg");
         case "Snake":
-          return browser.runtime.getURL("beasts/snake.jpg");
+          return chrome.runtime.getURL("beasts/snake.jpg");
         case "Turtle":
-          return browser.runtime.getURL("beasts/turtle.jpg");
+          return chrome.runtime.getURL("beasts/turtle.jpg");
       }
     }
 
@@ -45,17 +45,17 @@ function listenForClicks() {
       const action = buttonNameToCommand(e.target.textContent);
       switch (action) {
         case "login":
-          browser.storage.local.get("password").then((obj) => {
+          chrome.storage.local.get("password").then((obj) => {
             console.log("obj");
             console.log(obj);
-            browser.tabs.sendMessage(tabs[0].id, {
+            chrome.tabs.sendMessage(tabs[0].id, {
               command: action,
               password: obj.password
             });
           });
           break;
         case "open-preview":
-          browser.tabs.sendMessage(tabs[0].id, {
+          chrome.tabs.sendMessage(tabs[0].id, {
             command: action
           });
           break;
@@ -67,8 +67,8 @@ function listenForClicks() {
      * send a "reset" message to the content script in the active tab.
      */
     function reset(tabs) {
-      browser.tabs.removeCSS({code: hidePage}).then(() => {
-        browser.tabs.sendMessage(tabs[0].id, {
+      chrome.tabs.removeCSS({code: hidePage}).then(() => {
+        chrome.tabs.sendMessage(tabs[0].id, {
           command: "reset",
         });
       });
@@ -90,11 +90,11 @@ function listenForClicks() {
       return;
     } 
     if (e.target.type === "reset") {
-      browser.tabs.query({active: true, currentWindow: true})
+      chrome.tabs.query({active: true, currentWindow: true})
         .then(reset)
         .catch(reportError);
     } else {
-      browser.tabs.query({active: true, currentWindow: true})
+      chrome.tabs.query({active: true, currentWindow: true})
         .then(beastify)
         .catch(reportError);
     }
@@ -116,6 +116,17 @@ function reportExecuteScriptError(error) {
  * and add a click handler.
  * If we couldn't inject the script, handle the error.
  */
-browser.tabs.executeScript({file: "/content_scripts/beastify.js"})
-.then(listenForClicks)
-.catch(reportExecuteScriptError);
+getCurrentTab().then(tab => chrome.scripting
+    .executeScript({
+      target : {tabId : tab.id},
+      files : [ "/content_scripts/beastify.js" ],
+    }))
+    .then(listenForClicks)
+    .catch(reportExecuteScriptError);
+
+async function getCurrentTab() {
+  let queryOptions = { active: true, lastFocusedWindow: true };
+  // `tab` will either be a `tabs.Tab` instance or `undefined`.
+  let [tab] = await chrome.tabs.query(queryOptions);
+  return tab;
+}

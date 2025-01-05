@@ -1,20 +1,25 @@
-async function saveOptions(e) {
-    e.preventDefault();
-    await browser.storage.local.set({
-        password: document.querySelector("#password").value
-    });
-    console.log("Saved");
-    let res = await browser.storage.local.get('password');
-    console.log(res.password);
-}
+const saveOptions = () => {
+    const passwordValue = document.querySelector("#password").value
+    chrome.storage.local.set(
+        { password: passwordValue },
+        () => {
+            // Update status to let user know options were saved.
+            const status = document.getElementById('status');
+            status.textContent = 'Options saved.';
+            setTimeout(() => {
+                status.textContent = '';
+            }, 750);
+        }
+    );
+};
 
-async function restoreOptions() {
-    let res = await browser.storage.managed.get('password');
-    document.querySelector("#managed-password").innerText = res.password;
-
-    res = await browser.storage.local.get('password');
-    document.querySelector("#password").value = res.password || '';
-}
+const restoreOptions = () => {
+    chrome.storage.local.get(["password"])
+        .then((result) => {
+            document.getElementById('password').value = result.password;
+        }
+    );
+};
 
 document.addEventListener('DOMContentLoaded', restoreOptions);
 document.querySelector("form").addEventListener("submit", saveOptions);

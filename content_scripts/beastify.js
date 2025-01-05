@@ -37,8 +37,8 @@
    * Listen for messages from the background script.
    * Call "beastify()" or "reset()".
    */
-  browser.runtime.onMessage.addListener((message) => {
-    if (message.command === "login") {
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.command === "login") {
       let inputs = document.getElementsByTagName("input");
       /*Array.of(inputs).forEach(
         input => {
@@ -53,22 +53,22 @@
       let input = inputs[0];
       if (input.name === "password"
       && window.location.href.includes("benvenuti")) {
-        inputs[0].value = message.password;
+        inputs[0].value = request.password;
         document.getElementsByTagName("form")[0].submit();
       }
-    } else if (message.command === "reset") {
+    } else if (request.command === "reset") {
 
-    } else if (message.command === "open-preview") {
+    } else if (request.command === "open-preview") {
       let items = document.getElementById("browserItemsContentSortable");
       console.log(items);
       let itemsContent = items.getElementsByClassName("browserItemCONTENT");
       let buttons = itemsContent[0].getElementsByClassName("browserItemButtonView");
       let url = buttons[0].getAttribute("href");
       console.log("href is : " + url);
-      browser.runtime.sendMessage({
+      chrome.runtime.sendMessage({
         action: "open-page",
         url: url
-      });
+      }).then(result => {console.log("result", result);});
     }
   });
 
