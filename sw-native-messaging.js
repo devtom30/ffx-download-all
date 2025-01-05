@@ -1,5 +1,10 @@
 console.log("sw-native-messaging.js");
 
+let message;
+let port = null;
+connect();
+sendNativeMessage("ready?");
+
 let onCreated = (tab) => {
     console.log("created tab ");
     console.log(tab);
@@ -35,12 +40,46 @@ let func = ((message, sender, sendResponse) => {
             console.log("command save-page received");
             console.log(message);
             urlOk = true;
-            /*port.postMessage({
-                page: message.url,
-                head: message.head,
-                body: message.body
-            });*/
+            sendNativeMessage(urlReceived);
         }
     }
 });
 chrome.runtime.onMessage.addListener(func);
+
+function sendNativeMessage(message_content) {
+    message = { text: message_content };
+    port.postMessage(message);
+
+    /*chrome.downloads.download({
+        url: "https://kajabi-storefronts-production.kajabi-cdn.com/kajabi-storefronts-production/file-uploads/themes/2158669709/settings_images/4e33371-85cb-04eb-15-0c57a13832_e29c848d-945f-45de-aeee-a12857ebce19.png"
+    })
+        .then(downloadId => chrome.downloads.search({id: downloadId}))
+        .then(downloadItems => {
+            console.log(downloadItems);
+        });*/
+}
+
+function onNativeMessage(message) {
+    console.log('Received message: ' + JSON.stringify(message));
+}
+
+function onDisconnected() {
+    port = null;
+}
+
+function connect() {
+    const hostName = 'com.google.chrome.example.echo';
+    console.log(`connecting to ${hostName}`);
+    port = chrome.runtime.connectNative(hostName);
+    port.onMessage.addListener(onNativeMessage);
+    port.onDisconnect.addListener(onDisconnected);
+}
+
+/*
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('connect-button').addEventListener('click', connect);
+    document
+        .getElementById('send-message-button')
+        .addEventListener('click', sendNativeMessage);
+});
+*/
