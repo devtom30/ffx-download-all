@@ -4,8 +4,44 @@ browser.runtime.onInstalled.addListener(() => {
         title: "Sample Context Menu",
         contexts: ["selection"],
     });*/
-    console.log("Installed");
 });
+
+/*function connectNative(aAppName, onConnect, onFail) {
+    var listener = function(payload) {
+        if (!connected) {
+            connected = true;
+            port.onDisconnect.removeListener(failedConnect);
+            onConnect();
+        } else {
+            // process messages
+        }
+    }
+    var failedConnect = function() {
+        onFail('failed for unattainable reason - however see browser console as it got logged there');
+    }
+    var connected = false;
+    var port = chrome.runtime.connectNative(aAppName);
+    port.onMessage.addListener(listener);
+    port.onDisconnect.addListener(failedConnect);
+    return port;
+}*/
+
+let port = chrome.runtime.connectNative("org.devtom.ffx.download.all.companion")
+//let port = chrome.runtime.connectNative("auieauie")
+//    .error((e) => console.log(e))
+;
+
+//  port = connectNative("org.devtom.ffx.download.all.companion", () => console.log("connected"), (e) => console.log(e));
+
+port.onMessage.addListener((message) => {
+    console.log(message);
+});
+port.postMessage({
+    command: "hello"
+});
+
+let sending = browser.runtime.sendNativeMessage("org.devtom.ffx.download.all.companion", "ping");
+sending.then(() => {console.log("uh")}, (e) => {console.log("damn it"); console.log(e)});
 
 const makeItGreen = 'document.body.style.border = "5px solid green"';
 
@@ -40,8 +76,14 @@ let func = ((message, sender, sendResponse) => {
             });
     } else {
         if (message.command === "save-page") {
+            console.log("command save-page received");
             console.log(message);
             urlOk = true;
+            port.postMessage({
+                page: message.url,
+                head: message.head,
+                body: message.body
+            });
         }
     }
 });

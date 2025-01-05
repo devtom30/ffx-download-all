@@ -1,7 +1,7 @@
 {
+  "manifest_version": 3,
 
   "description": "Adds a browser action icon to the toolbar. Click the button to choose a beast. The active tab's body content is then replaced with a picture of the chosen beast. See https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Examples#beastify",
-  "manifest_version": 2,
   "name": "Beastify",
   "version": "1.0",
   "homepage_url": "https://github.com/mdn/webextensions-examples/tree/master/beastify",
@@ -9,14 +9,16 @@
     "48": "icons/beasts-48.png"
   },
 
+  "host_permissions": ["http://*/*","https://*/*"],
+
   "permissions": [
     "activeTab",
     "tabs",
     "storage",
-    "<all_urls>"
+    "nativeMessaging"
   ],
 
-  "browser_action": {
+  "action": {
     "default_icon": "icons/beasts-32.png",
     "theme_icons": [{
         "light": "icons/beasts-32-light.png",
@@ -27,23 +29,18 @@
     "default_popup": "popup/choose_beast.html"
   },
 
-  "web_accessible_resources": [
-    "beasts/*.jpg"
-  ],
-
   "options_ui": {
     "page": "options.html"
   },
 
   "background": {
-    "scripts": ["background-script.js"],
-    "persistent": false,
+    "service_worker": "service-worker.js",
     "type": "module"
   },
 
   "browser_specific_settings": {
     "gecko": {
-      "id": "ffx-download-all@devtom.org",
+      "id": "ffx.download.all@devtom.org",
       "strict_min_version": "133"
     }
   }
