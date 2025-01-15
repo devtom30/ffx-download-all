@@ -33,6 +33,18 @@
     }
   }
 
+  function extractButtonView() {
+    return document.getElementById("browserItemsContentSortable")
+        .getElementsByClassName("browserItemCONTENT")[0]
+        .getElementsByClassName("browserItemButtonView")[0];
+  }
+
+  function extractButtonPreview() {
+    return document.getElementById("browserItemsContentSortable")
+        .getElementsByClassName("browserItemCONTENT")[0]
+        .getElementsByClassName("browserItemButtonPreview")[0];
+  }
+
   /**
    * Listen for messages from the background script.
    * Call "beastify()" or "reset()".
@@ -59,16 +71,25 @@
     } else if (request.command === "reset") {
 
     } else if (request.command === "open-preview") {
-      let items = document.getElementById("browserItemsContentSortable");
-      console.log(items);
-      let itemsContent = items.getElementsByClassName("browserItemCONTENT");
-      let buttons = itemsContent[0].getElementsByClassName("browserItemButtonView");
-      let url = buttons[0].getAttribute("href");
-      console.log("href is : " + url);
+      let button = extractButtonView();
+      if (!button) {
+        console.error("Could not find a button view");
+        return;
+      }
+      buttonUrl = button.getAttribute("href");
+      console.log("href is : " + buttonUrl);
+      if (button.style.display === "none") {
+        button = extractButtonPreview();
+        if (!button) {
+          console.error("Could not find a button preview");
+          return;
+        }
+      }
+      button.click();
       chrome.runtime.sendMessage({
-        action: "open-page",
-        url: url
-      }).then(result => {console.log("result", result);});
+        command: "just-open-page",
+        url: buttonUrl
+      });
     }
   });
 

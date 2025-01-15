@@ -3,7 +3,7 @@ console.log("sw-native-messaging.js");
 let message;
 let port = null;
 connect();
-sendNativeMessage("ready?");
+// sendNativeMessage("ready?");
 
 let onCreated = (tab) => {
     console.log("created tab ");
@@ -17,30 +17,23 @@ let onError = (error) => {
 let urlReceived = "";
 let tabsCreatingTime = 0;
 let urlOk = false;
+let urlMap = new Map();
+
 let func = ((message, sender, sendResponse) => {
     if (message.action && message.action === "open-page") {
         console.log(message);
         urlReceived = message.url;
         urlOk = false;
-        let creating = chrome.tabs.create({
-            url: urlReceived,
-        });
-        creating
-            .then(onCreated, onError)
-            .then(tab => {
-                tabsCreatingTime = Date.now();
-                console.log("executing script in tab now…");
-                return [tab, chrome.scripting.executeScript({
-                    target: {tabId: tab.id},
-                    files: ["/lib/in-tab.js"]
-                })];
-            });
     } else {
         if (message.command === "save-page") {
             console.log("command save-page received");
             console.log(message);
             urlOk = true;
             sendNativeMessage(urlReceived);
+        } else if (message.command === "just-open-page") {
+            console.log("command just-open-page received");
+            console.log(message);
+            urlMap.set(message.url, "open");
         }
     }
 });
@@ -75,11 +68,23 @@ function connect() {
     port.onDisconnect.addListener(onDisconnected);
 }
 
-/*
-document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById('connect-button').addEventListener('click', connect);
-    document
-        .getElementById('send-message-button')
-        .addEventListener('click', sendNativeMessage);
-});
-*/
+
+function onTabsUpdated(tabId, changeInfo, tab) {
+    let url = urlMap.get(tab.url) ?
+        tab.url :
+        urlMap.get(tab.pendingUrl) ?
+            tab.pendingUrl :
+            "";
+    if (url
+        && urlMap.get(url) === "open") {
+        urlMap.set(url, "processing")
+        console.log(url + " tab open with button : " + tabId);
+        chrome.scripting.executeScript({
+            target: {tabId: tab.id},
+            files: ["/lib/in-tab.js"]
+        }).then(() => {
+            console.log("script executed successfully in tab.");
+        });
+    }
+}
+chrome.tabs.onUpdated.addListener(onTabsUpdated);
