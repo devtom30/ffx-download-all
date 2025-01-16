@@ -24,17 +24,24 @@ let func = ((message, sender, sendResponse) => {
         console.log(message);
         urlReceived = message.url;
         urlOk = false;
-    } else {
-        if (message.command === "save-page") {
-            console.log("command save-page received");
-            console.log(message);
-            urlOk = true;
-            sendNativeMessage(urlReceived);
-        } else if (message.command === "just-open-page") {
-            console.log("command just-open-page received");
-            console.log(message);
-            urlMap.set(message.url, "open");
+    } else if (message.command === "save-page") {
+        console.log("command save-page received");
+        console.log(message);
+        urlOk = true;
+        sendNativeMessage(urlReceived);
+    } else if (message.command === "just-open-page") {
+        console.log("command just-open-page received");
+        console.log(message);
+        urlMap.set(message.url, new UrlState(UrlStatus.OPEN, undefined));
+    } else if (message.command === "error-404") {
+        let urlInMap = urlMap.get(message.url);
+        if (!urlInMap) {
+            console.log("error-404: url not found in map " + message.url);
+            return;
         }
+        chrome.tabs.remove(urlInMap.tabId, () => {
+            console.log("tab removed : " + urlInMap.tabId);
+        });
     }
 });
 chrome.runtime.onMessage.addListener(func);
@@ -70,14 +77,35 @@ function connect() {
 
 
 function onTabsUpdated(tabId, changeInfo, tab) {
+    if (tab.status !== "complete") {
+        console.log("tab (" + tab.id + ") status: " + tab.status);
+        return;
+    }
+    console.log("onTabsUpdated", tabId, changeInfo, tab);
+    console.dir(urlMap);
+
+    if (tab.url.startsWith("https://benvenuti.e-monsite.com/passwordaccess")) {
+        chrome.scripting.executeScript({
+            target: {tabId: tab.id},
+            files: ["/lib/in-tab.js"]
+        }).then(() => {
+            console.log("script executed successfully in password tab.");
+        });
+        return;
+    }
+
     let url = urlMap.get(tab.url) ?
         tab.url :
         urlMap.get(tab.pendingUrl) ?
             tab.pendingUrl :
             "";
     if (url
-        && urlMap.get(url) === "open") {
-        urlMap.set(url, "processing")
+        && urlMap.get(url).status === UrlStatus.OPEN) {
+        console.dir(tab);
+        console.log("url : " + url);
+        console.log("urlMap.get(url)", urlMap.get(url));
+        urlMap.get(url).status = UrlStatus.PROCESSING;
+        urlMap.get(url).tabId = tab.id;
         console.log(url + " tab open with button : " + tabId);
         chrome.scripting.executeScript({
             target: {tabId: tab.id},
@@ -88,3 +116,33 @@ function onTabsUpdated(tabId, changeInfo, tab) {
     }
 }
 chrome.tabs.onUpdated.addListener(onTabsUpdated);
+
+class UrlState {
+    #status = "";
+    #tabId = 0;
+    constructor(status, tabId) {
+        this.#status = status;
+        this.#tabId = tabId;
+    }
+
+    get status() {
+        return this.#status;
+    }
+
+    set status(value) {
+        this.#status = value;
+    }
+
+    get tabId() {
+        return this.#tabId;
+    }
+
+    set tabId(value) {
+        this.#tabId = value;
+    }
+}
+
+const UrlStatus = Object.freeze({
+    OPEN: Symbol("open"),
+    PROCESSING: Symbol("processing"),
+})
