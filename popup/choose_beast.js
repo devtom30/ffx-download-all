@@ -33,6 +33,12 @@ function listenForClicks() {
           return "login";
         case "Open preview":
           return "open-preview";
+        case "Connect":
+          return "connect";
+        case "Test message":
+          return "testmessage";
+        case "Disconnect":
+          return "disconnect";
       }
     }
 
@@ -59,6 +65,15 @@ function listenForClicks() {
             command: action,
             tabId: tabs[0].id
           });
+          break;
+        case "connect":
+          chrome.runtime.sendMessage({command: "connect"}).then();
+          break;
+        case "testmessage":
+          chrome.runtime.sendMessage({command: "testmessage"}).then();
+          break;
+        case "disconnect":
+          chrome.runtime.sendMessage({command: "disconnect"}).then();
           break;
       }
     }

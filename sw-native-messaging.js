@@ -50,6 +50,15 @@ let func = ((message, sender, sendResponse) => {
         chrome.tabs.sendMessage(mainTabId, {
             command: "open-preview",
         }).then().catch((e) => console.log(e));
+    } else if (message.command === "connect") {
+        console.log("native connect now");
+        connect();
+    } else if (message.command === "testmessage") {
+        console.log("test message sending now");
+        sendNativeMessage("the test message");
+    } else if (message.command === "disconnect") {
+        console.log("disconnect now");
+        disconnect();
     }
 });
 chrome.runtime.onMessage.addListener(func);
@@ -81,6 +90,10 @@ function connect() {
     port = chrome.runtime.connectNative(hostName);
     port.onMessage.addListener(onNativeMessage);
     port.onDisconnect.addListener(onDisconnected);
+}
+
+function disconnect() {
+    port.disconnect();
 }
 
 
