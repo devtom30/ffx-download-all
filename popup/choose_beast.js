@@ -56,7 +56,8 @@ function listenForClicks() {
           break;
         case "open-preview":
           chrome.tabs.sendMessage(tabs[0].id, {
-            command: action
+            command: action,
+            tabId: tabs[0].id
           });
           break;
       }

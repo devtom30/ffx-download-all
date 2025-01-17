@@ -50,6 +50,7 @@
    * Call "beastify()" or "reset()".
    */
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    console.log("content_script: request", request);
     if (request.command === "login") {
       let inputs = document.getElementsByTagName("input");
       /*Array.of(inputs).forEach(
@@ -71,6 +72,7 @@
     } else if (request.command === "reset") {
 
     } else if (request.command === "open-preview") {
+      console.log("do open-preview");
       let button = extractButtonView();
       if (!button) {
         console.error("Could not find a button view");
@@ -85,10 +87,13 @@
           return;
         }
       }
+      console.log("click() now");
       button.click();
+      console.log("sendMessage() now just-open-page");
       chrome.runtime.sendMessage({
         command: "just-open-page",
-        url: buttonUrl
+        url: buttonUrl,
+        tabId: request.tabId
       });
     }
   });

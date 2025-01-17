@@ -18,6 +18,7 @@ let urlReceived = "";
 let tabsCreatingTime = 0;
 let urlOk = false;
 let urlMap = new Map();
+let mainTabId = 0;
 
 let func = ((message, sender, sendResponse) => {
     if (message.action && message.action === "open-page") {
@@ -33,6 +34,8 @@ let func = ((message, sender, sendResponse) => {
         console.log("command just-open-page received");
         console.log(message);
         urlMap.set(message.url, new UrlState(UrlStatus.OPEN, undefined));
+        mainTabId = message.tabId;
+        console.log("mainTabId is : " + mainTabId);
     } else if (message.command === "error-404") {
         let urlInMap = urlMap.get(message.url);
         if (!urlInMap) {
@@ -42,6 +45,11 @@ let func = ((message, sender, sendResponse) => {
         chrome.tabs.remove(urlInMap.tabId, () => {
             console.log("tab removed : " + urlInMap.tabId);
         });
+
+        console.log("sending message to mainTabId " + mainTabId);
+        chrome.tabs.sendMessage(mainTabId, {
+            command: "open-preview",
+        }).then().catch((e) => console.log(e));
     }
 });
 chrome.runtime.onMessage.addListener(func);
