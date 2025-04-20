@@ -17,7 +17,7 @@ let onError = (error) => {
 let urlReceived = "";
 let tabsCreatingTime = 0;
 let urlOk = false;
-let urlMap = new Map();
+const urlMap = new Map();
 let mainTabId = 0;
 
 let func = ((message, sender, sendResponse) => {
@@ -29,11 +29,13 @@ let func = ((message, sender, sendResponse) => {
         console.log("command save-page received");
         console.log(message);
         urlOk = true;
-        sendNativeMessage(urlReceived);
+        sendNativeMessage(message.url);
     } else if (message.command === "just-open-page") {
         console.log("command just-open-page received");
         console.log(message);
         urlMap.set(message.url, new UrlState(UrlStatus.OPEN, undefined));
+        console.log("urlMap new url: " + message.url);
+        console.dir(urlMap);
         mainTabId = message.tabId;
         console.log("mainTabId is : " + mainTabId);
     } else if (message.command === "error-404") {
@@ -65,6 +67,8 @@ chrome.runtime.onMessage.addListener(func);
 
 function sendNativeMessage(message_content) {
     message = { text: message_content };
+    console.log("sending message ");
+    console.dir(message);
     port.postMessage(message);
 
     /*chrome.downloads.download({
@@ -115,18 +119,21 @@ function onTabsUpdated(tabId, changeInfo, tab) {
         return;
     }
 
-    let url = urlMap.get(tab.url) ?
+    let url = getFromMap(urlMap, tab.url) ?
         tab.url :
-        urlMap.get(tab.pendingUrl) ?
+        getFromMap(urlMap, tab.pendingUrl) ?
             tab.pendingUrl :
             "";
-    if (url
-        && urlMap.get(url).status === UrlStatus.OPEN) {
+    console.log("url: " + url);
+    let urlData = getFromMap(urlMap, url);
+    console.dir(urlData);
+    console.log("status: " + urlData.status.toString());
+    if (urlData
+        && urlData.status === UrlStatus.OPEN) {
         console.dir(tab);
         console.log("url : " + url);
-        console.log("urlMap.get(url)", urlMap.get(url));
-        urlMap.get(url).status = UrlStatus.PROCESSING;
-        urlMap.get(url).tabId = tab.id;
+        getFromMap(urlMap, url).status = UrlStatus.PROCESSING;
+        getFromMap(urlMap, url).tabId = tab.id;
         console.log(url + " tab open with button : " + tabId);
         chrome.scripting.executeScript({
             target: {tabId: tab.id},
@@ -139,27 +146,27 @@ function onTabsUpdated(tabId, changeInfo, tab) {
 chrome.tabs.onUpdated.addListener(onTabsUpdated);
 
 class UrlState {
-    #status = "";
-    #tabId = 0;
+    status = "";
+    tabId = 0;
     constructor(status, tabId) {
-        this.#status = status;
-        this.#tabId = tabId;
+        this.status = status;
+        this.tabId = tabId;
     }
 
     get status() {
-        return this.#status;
+        return this.status;
     }
 
     set status(value) {
-        this.#status = value;
+        this.status = value;
     }
 
     get tabId() {
-        return this.#tabId;
+        return this.tabId;
     }
 
     set tabId(value) {
-        this.#tabId = value;
+        this.tabId = value;
     }
 }
 
@@ -167,3 +174,21 @@ const UrlStatus = Object.freeze({
     OPEN: Symbol("open"),
     PROCESSING: Symbol("processing"),
 })
+
+function getFromMap(map, url) {
+    console.log("getFromMap() url:  " + url);
+    if (url.startsWith("https:")) {
+        url = url.replace("https:", "http:");
+    }
+    console.log("getting url " + url);
+    return map.get(url);
+}
+
+function isUrlOpen(map, url) {
+    if (url.startsWith("https:")) {
+        url = url.replace("https:", "http:");
+        console.log("getFromMap(): " + url);
+    }
+    const urlState = map.get(url);
+    return urlState.status === UrlStatus.OPEN;
+}
