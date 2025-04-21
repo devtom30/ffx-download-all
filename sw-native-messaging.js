@@ -29,7 +29,11 @@ let func = ((message, sender, sendResponse) => {
         console.log("command save-page received");
         console.log(message);
         urlOk = true;
-        sendNativeMessage(message.url);
+        let task = {
+            url: message.url,
+            task_type: "parse"
+        };
+        sendNativeMessageTask(task);
     } else if (message.command === "just-open-page") {
         console.log("command just-open-page received");
         console.log(message);
@@ -78,6 +82,11 @@ function sendNativeMessage(message_content) {
         .then(downloadItems => {
             console.log(downloadItems);
         });*/
+}
+
+function sendNativeMessageTask(task) {
+    console.log("sending task " + task);
+    port.postMessage(task);
 }
 
 function onNativeMessage(message) {
@@ -173,6 +182,11 @@ class UrlState {
 const UrlStatus = Object.freeze({
     OPEN: Symbol("open"),
     PROCESSING: Symbol("processing"),
+})
+
+const TaskType = Object.freeze({
+    PARSE: Symbol("parse"),
+    ATTACH: Symbol("attach")
 })
 
 function getFromMap(map, url) {
