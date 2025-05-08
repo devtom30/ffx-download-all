@@ -31,7 +31,9 @@ let func = ((message, sender, sendResponse) => {
         urlOk = true;
         let task = {
             url: message.url,
-            task_type: "parse"
+            task_type: "parse",
+            body: message.body,
+            head: message.head
         };
         sendNativeMessageTask(task);
     } else if (message.command === "just-open-page") {
@@ -85,7 +87,8 @@ function sendNativeMessage(message_content) {
 }
 
 function sendNativeMessageTask(task) {
-    console.log("sending task " + task);
+    console.log("sending task ");
+    console.log(task);
     port.postMessage(task);
 }
 
@@ -133,6 +136,9 @@ function onTabsUpdated(tabId, changeInfo, tab) {
         getFromMap(urlMap, tab.pendingUrl) ?
             tab.pendingUrl :
             "";
+    if (url === "") {
+        return;
+    }
     console.log("url: " + url);
     let urlData = getFromMap(urlMap, url);
     console.dir(urlData);
@@ -190,6 +196,9 @@ const TaskType = Object.freeze({
 })
 
 function getFromMap(map, url) {
+    if (url === null || url === undefined) {
+        return null;
+    }
     console.log("getFromMap() url:  " + url);
     if (url.startsWith("https:")) {
         url = url.replace("https:", "http:");
