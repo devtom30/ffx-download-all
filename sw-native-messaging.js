@@ -18,6 +18,8 @@ let urlReceived = "";
 let tabsCreatingTime = 0;
 let urlOk = false;
 const urlMap = new Map();
+const downloadMap = new Map();
+const downloadPageUrlMap = new Map();
 let mainTabId = 0;
 
 let func = ((message, sender, sendResponse) => {
@@ -94,6 +96,10 @@ function sendNativeMessageTask(task) {
 
 function onNativeMessage(message) {
     console.log('Received message: ' + JSON.stringify(message));
+    if (message.task_type === "download"
+        && message.url) {
+        startDownload(message.url, message.page_url);
+    }
 }
 
 function onDisconnected() {
@@ -215,3 +221,48 @@ function isUrlOpen(map, url) {
     const urlState = map.get(url);
     return urlState.status === UrlStatus.OPEN;
 }
+
+function startDownload(url, page_url) {
+    chrome.downloads.download({
+        url: url
+    }).then(downloadId => {
+        downloadPageUrlMap.set(downloadId, message.page_url);
+        console.log("Download done: " + downloadId);
+    });
+}
+
+/*
+chrome.downloads.download({
+    url: "https://www.gstatic.com/devrel-devsite/prod/va15d3cf2bbb0f0b76bff872a3310df731db3118331ec014ebef7ea080350285b/chrome/images/lockup.svg",
+    filename: "downloaded_lockup.svg" // Optional
+}).then(downloadId => {
+    console.log("Download started: " + downloadId);
+    downloadMap.set(downloadId, {});
+});
+*/
+
+function handleCompletedDownload(downloadItem) {
+    if (downloadMap.get(downloadItem.id) !== null) {
+        downloadMap.set(downloadItem.id, downloadItem)
+        sendNativeMessage({
+            task_type: "attach",
+            url: downloadItem.url,
+            file_path: downloadItem.filename,
+            page_url: downloadPageUrlMap.get(downloadItem.id)
+        });
+    } else {
+        console.log("downloadItem not found in downloadMap");
+    }
+}
+
+chrome.downloads.onChanged.addListener(function(delta) {
+    console.log("Download changed: " + JSON.stringify(delta));
+    if (delta.state && delta.state.current === "complete") {
+        console.log("Download completed: " + delta.id);
+        chrome.downloads.search({id: delta.id}).then(downloadItems => {
+            console.log("Download filename: " + downloadItems[0].filename);
+            handleCompletedDownload(downloadItems[0]);
+        })
+    }
+})
+

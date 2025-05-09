@@ -16,7 +16,8 @@
     "tabs",
     "storage",
     "nativeMessaging",
-    "scripting"
+    "scripting",
+    "downloads"
   ],
 
   "action": {
