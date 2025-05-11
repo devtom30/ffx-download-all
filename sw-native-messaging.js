@@ -97,8 +97,11 @@ function sendNativeMessageTask(task) {
 function onNativeMessage(message) {
     console.log('Received message: ' + JSON.stringify(message));
     if (message.task_type === "download"
-        && message.url) {
+        && message.url
+        && message.page_url) {
         startDownload(message.url, message.page_url);
+    } else {
+        console.log("incomplete task received");
     }
 }
 
@@ -226,7 +229,7 @@ function startDownload(url, page_url) {
     chrome.downloads.download({
         url: url
     }).then(downloadId => {
-        downloadPageUrlMap.set(downloadId, message.page_url);
+        downloadPageUrlMap.set(downloadId, page_url);
         console.log("Download done: " + downloadId);
     });
 }
@@ -244,7 +247,7 @@ chrome.downloads.download({
 function handleCompletedDownload(downloadItem) {
     if (downloadMap.get(downloadItem.id) !== null) {
         downloadMap.set(downloadItem.id, downloadItem)
-        sendNativeMessage({
+        sendNativeMessageTask({
             task_type: "attach",
             url: downloadItem.url,
             file_path: downloadItem.filename,
