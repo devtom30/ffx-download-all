@@ -45,6 +45,24 @@
         .getElementsByClassName("browserItemButtonPreview")[0];
   }
 
+  function openCategoriesRec(root, depth, path) {
+    let name = root.getElementsByClassName("browserCategoryName")[0]
+        .textContent;
+    if (path === "") {
+      path = name;
+    } else {
+      path += " /" + name;
+    }
+    console.log(depth + ") " + name + " (" + path + ")");
+    if (root.getElementsByClassName("browserCategoryChilds").length > 0) {
+      let categories = root.getElementsByClassName("browserCategoryChilds")[0]
+          .getElementsByClassName("browserCategory");
+      for (let category of categories) {
+        openCategoriesRec(category, depth + 1, path);
+      }
+    }
+  }
+
   /**
    * Listen for messages from the background script.
    * Call "beastify()" or "reset()".
@@ -95,6 +113,11 @@
         url: buttonUrl,
         tabId: request.tabId
       });
+    } else if (request.command === "discover-all") {
+      console.log("discover-all now");
+      let root = document.getElementById("browserCategoriesContent")
+          .getElementsByClassName("browserCategory")[0];
+      openCategoriesRec(root, 0, "");
     }
   });
 

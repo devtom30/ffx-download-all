@@ -33,6 +33,8 @@ function listenForClicks() {
           return "login";
         case "Open preview":
           return "open-preview";
+        case "Discover all":
+          return "discover-all";
         case "Connect":
           return "connect";
         case "Test message":
@@ -66,6 +68,11 @@ function listenForClicks() {
             tabId: tabs[0].id
           });
           break;
+        case "discover-all":
+          chrome.tabs.sendMessage(tabs[0].id, {
+            command: action,
+            tabId: tabs[0].id
+          })
         case "connect":
           chrome.runtime.sendMessage({command: "connect"}).then();
           break;
