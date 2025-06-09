@@ -35,6 +35,8 @@ function listenForClicks() {
           return "open-preview";
         case "Discover all":
           return "discover-all";
+        case "Open all categories":
+          return "open-all-categories";
         case "Connect":
           return "connect";
         case "Test message":
@@ -69,6 +71,12 @@ function listenForClicks() {
           });
           break;
         case "discover-all":
+          chrome.tabs.sendMessage(tabs[0].id, {
+            command: action,
+            tabId: tabs[0].id
+          })
+          break;
+        case "open-all-categories":
           chrome.tabs.sendMessage(tabs[0].id, {
             command: action,
             tabId: tabs[0].id

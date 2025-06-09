@@ -22,6 +22,40 @@ const downloadMap = new Map();
 const downloadPageUrlMap = new Map();
 let mainTabId = 0;
 
+let categoryListToDo = new Map();
+let categoryListProcessing = new Map();
+let categoryListDone = new Map();
+let savingCategoriesOnGoing = false;
+
+const savingCategoriesIntervalId = setInterval(() => {
+    if (categoryListProcessing.size > 0) {
+        console.log("processing category ");
+    } else if (categoryListToDo.size > 0) {
+        savingCategoriesOnGoing = true;
+        const catToDo = categoryListToDo.keys().next().value;
+        const linkToBeClicked = categoryListToDo.values().next().value;
+        console.log("linkToBeClicked", linkToBeClicked);
+        console.log("processing category " + catToDo);
+        categoryListProcessing.set(catToDo, categoryListToDo.get(catToDo));
+        categoryListToDo.delete(catToDo);
+        chrome.tabs.sendMessage(mainTabId, {
+            name: catToDo,
+            command: "save-category",
+            linkDataId: linkToBeClicked,
+        }).then().catch((e) => console.log(e));
+    } else {
+        console.log("no category to process");
+        if (savingCategoriesOnGoing) {
+            savingCategoriesOnGoing = false;
+            clearInterval(savingCategoriesIntervalId);
+        }
+    }
+    console.log("remaining " + categoryListToDo.size);
+    console.log("done " + categoryListDone.size);
+}, 1000);
+
+
+
 let func = ((message, sender, sendResponse) => {
     if (message.action && message.action === "open-page") {
         console.log(message);
@@ -69,6 +103,17 @@ let func = ((message, sender, sendResponse) => {
     } else if (message.command === "disconnect") {
         console.log("disconnect now");
         disconnect();
+    } else if (message.command === "add-category-to-list") {
+        console.log("adding category to list");
+        console.log(message);
+        mainTabId = message.tabId;
+        console.log("mainTabId is " + mainTabId);
+        categoryListToDo.set(message.name, message.linkDataId);
+        // savingCategoriesOnGoing = true;
+    } else if (message.command === "save-category-done") {
+        console.log("receive end for category " + message.name);
+        categoryListDone.set(message.name, categoryListProcessing.get(message.name));
+        categoryListProcessing.delete(message.name);
     }
 });
 chrome.runtime.onMessage.addListener(func);
@@ -267,5 +312,6 @@ chrome.downloads.onChanged.addListener(function(delta) {
             handleCompletedDownload(downloadItems[0]);
         })
     }
-})
+});
+
 

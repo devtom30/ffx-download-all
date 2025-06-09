@@ -57,6 +57,9 @@ let onError = (error) => {
 let urlReceived = "";
 let tabsCreatingTime = 0;
 let urlOk = false;
+let categoryListToDo = new Map();
+let categoryListProcessing = new Map();
+let categoryListDone = new Map();
 let func = ((message, sender, sendResponse) => {
     if (message.action && message.action === "open-page") {
         console.log(message);
@@ -74,25 +77,41 @@ let func = ((message, sender, sendResponse) => {
                     file: "/lib/in-tab.js"
                 })];
             });
-    } else {
-        if (message.command === "save-page") {
-            console.log("command save-page received");
-            console.log(message);
-            urlOk = true;
-            port.postMessage({
-                page: message.url,
-                head: message.head,
-                body: message.body
-            });
-        }
+    } else if (message.command === "save-page") {
+        console.log("command save-page received");
+        console.log(message);
+        urlOk = true;
+        port.postMessage({
+            page: message.url,
+            head: message.head,
+            body: message.body
+        });
+    } else if (message.command === "add-category-to-list") {
+        console.log("adding category to list");
+        categoryListToDo.set(message.name, message.domObject)
+    } else if (message.command === "save_category_done") {
+        console.log("receive end for category " + message.name);
+        categoryListDone.set(message.name, categoryListProcessing.get(message.name));
+        categoryListProcessing.delete(message.name);
     }
 });
 browser.runtime.onMessage.addListener(func);
 
-/*
 setInterval(() => {
-    console.log(urlOk);
-    if (!urlOk) {
-        console.log("url (" + urlReceived + ") has not been saved");
+    if (categoryListProcessing.size > 0) {
+        console.log("processing category ");
+        return;
     }
-}, 1000);*/
+    if (categoryListToDo.size > 0) {
+        const catToDo = categoryListToDo.keys()[0];
+        console.log("processing category " + catToDo);
+        categoryListProcessing.set(catToDo, categoryListToDo.get(catToDo));
+        categoryListToDo.delete(catToDo);
+        chrome.runtime.sendMessage({
+            name: catToDo,
+            command: "save-category"
+        })
+    } else {
+        console.log("no category to process");
+    }
+}, 1000);
