@@ -193,6 +193,50 @@
     }
   }
 
+  let pagesToSave = new Map();
+  let pagesInProgress = new Map();
+  let pagesDone = new Map();
+
+  function findAllCategoryPages() {
+    const itemsContentContainer = document.getElementById("browserItemsContent");
+    const items = itemsContentContainer.getElementsByClassName("browserItem");
+    for (let item of items) {
+      const itemContent = item.getElementsByClassName("browserItemCONTENT")[0];
+      if (itemContent) {
+        let button = itemContent.getElementsByClassName("browserItemButtonView")[0];
+        if (button) {
+          const buttonUrl = button.getAttribute("href");
+          console.log("page href is : " + buttonUrl);
+          if (button.style.display === "none") {
+            button = itemContent.getElementsByClassName("browserItemButtonPreview")[0];
+            if (!button) {
+              console.error("Could not find a button preview");
+            }
+          }
+        } else {
+          console.log("no button view");
+        }
+      }
+    }
+  }
+
+  function findPlusLink() {
+    const plusButton = document.getElementById("browserItemsPlus");
+    const computedStyles = window.getComputedStyle(plusButton);
+    if (computedStyles.getPropertyValue("display") === "block") {
+      const plusLink = document.getElementById("browserItemsPlusAll");
+      if (plusLink) {
+        console.log("found plus Link");
+        plusLink.click();
+      }
+    }
+  }
+
+  function saveCurrentCategoryPages() {
+    findPlusLink();
+    findAllCategoryPages();
+  }
+
   /**
    * Listen for messages from the background script.
    * Call "beastify()" or "reset()".
@@ -257,11 +301,12 @@
       console.log(link);
       link.click();
       setTimeout(() => {
+        saveCurrentCategoryPages();
         chrome.runtime.sendMessage({
           command: "save-category-done",
           name: request.name
         });
-      }, 2000);
+      }, 1000);
     }
   });
 
