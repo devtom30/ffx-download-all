@@ -91,89 +91,15 @@
 
 
     }, 2000);
+  }
 
-    return;
-
-    if (root.getElementsByClassName("browserCategoryChilds").length > 0) {
-      let categories = root.getElementsByClassName("browserCategoryChilds")[0]
-          .getElementsByClassName("browserCategory");
-      for (let category of categories) {
-        let links = category.getElementsByClassName("browserCategoryName");
-        if (links.length > 0) {
-          links.forEach(link => {
-            console.log(link.innerText);
-          })
-        }
-      }
+  function retrieveCategoryPath(link, path) {
+    const parent = link.parentNode.closest(".browserCategory");
+    if (parent != null) {
+      const categoryName = parent.querySelector(".browserCategoryName").innerText;
+      return retrieveCategoryPath(parent,  " / " + categoryName + path);
     }
-
-    return;
-
-    setTimeout(() => {
-      categoryNameA.click();
-//    window.dispatchEvent(new MouseEvent("mouseenter", {relatedTarget: categoryNameA}));
-      setTimeout(() => {
-        const browserCategoryAboutName = document.getElementById("browserCategoryAboutName");
-        console.log("browserCategoryAboutName : " + browserCategoryAboutName.textContent);
-//    window.dispatchEvent(new MouseEvent("click", {relatedTarget: browserCategoryAboutName}));
-      }, 2000);
-      if (root.getElementsByClassName("browserCategoryChilds").length > 0) {
-        let categories = root.getElementsByClassName("browserCategoryChilds")[0]
-            .getElementsByClassName("browserCategory");
-        //let delay = 2000;
-        //let i = 1;
-        for (let category of categories) {
-          let icons = category.getElementsByClassName("browserCategoryIcon");
-          if (icons.length > 0 && icons[0].classList.contains("closed")) {
-            icons[0].click();
-          }
-          // openCategoriesRec(category, depth + 1, path);
-        }
-      }
-    }, 3000);
-
-    return;
-    setTimeout(() => {
-      const plusAllA = document.getElementById("browserItemsPlusAll");
-      if (plusAllA) {
-        // window.dispatchEvent(new MouseEvent(123, {relatedTarget: plusAllA}));
-        plusAllA.click();
-        setTimeout(() => {
-          const itemsContentContainer = document.getElementById("browserItemsContent");
-          const items = itemsContentContainer.getElementsByClassName("browserItem");
-          for (let item of items) {
-            const itemContent = item.getElementsByClassName("browserItemCONTENT")[0];
-            if (itemContent) {
-              let button = itemContent.getElementsByClassName("browserItemButtonView")[0];
-              if (button) {
-                const buttonUrl = button.getAttribute("href");
-                console.log("page href is : " + buttonUrl);
-                if (button.style.display === "none") {
-                  button = itemContent.getElementsByClassName("browserItemButtonPreview")[0];
-                  if (!button) {
-                    console.error("Could not find a button preview");
-                  }
-                }
-              } else {
-                console.log("no button view");
-              }
-            }
-          }
-
-          if (root.getElementsByClassName("browserCategoryChilds").length > 0) {
-            let categories = root.getElementsByClassName("browserCategoryChilds")[0]
-                .getElementsByClassName("browserCategory");
-            for (let category of categories) {
-              let icons = category.getElementsByClassName("browserCategoryIcon");
-              if (icons.length > 0 && icons[0].classList.contains("closed")) {
-                icons[0].click();
-              }
-              openCategoriesRec(category, depth + 1, path);
-            }
-          }
-        }, 2000);
-      }
-    }, 1000);
+    return path;
   }
 
   function openAllCategories(tabId) {
@@ -183,9 +109,11 @@
       Array.from(links).forEach(link => {
         console.log(link.innerText);
         console.log(link);
+        const path = retrieveCategoryPath(link, "");
         chrome.runtime.sendMessage({
           command: "add-category-to-list",
           name: link.innerText,
+          path: path,
           linkDataId: link.getAttribute("data-id"),
           tabId: tabId
         })

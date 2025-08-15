@@ -23,6 +23,7 @@ const downloadPageUrlMap = new Map();
 let mainTabId = 0;
 
 let categoryListToDo = new Map();
+let categoryPathMap = new Map();
 let categoryListProcessing = new Map();
 let categoryListDone = new Map();
 let savingCategoriesOnGoing = false;
@@ -36,6 +37,7 @@ const savingCategoriesIntervalId = setInterval(() => {
         const linkToBeClicked = categoryListToDo.values().next().value;
         console.log("linkToBeClicked", linkToBeClicked);
         console.log("processing category " + catToDo);
+        console.log("category path : " + categoryPathMap.get(linkToBeClicked));
         categoryListProcessing.set(catToDo, categoryListToDo.get(catToDo));
         categoryListToDo.delete(catToDo);
         chrome.tabs.sendMessage(mainTabId, {
@@ -109,6 +111,7 @@ let func = ((message, sender, sendResponse) => {
         mainTabId = message.tabId;
         console.log("mainTabId is " + mainTabId);
         categoryListToDo.set(message.name, message.linkDataId);
+        categoryPathMap.set(message.linkDataId, message.path);
         // savingCategoriesOnGoing = true;
     } else if (message.command === "save-category-done") {
         console.log("receive end for category " + message.name);
