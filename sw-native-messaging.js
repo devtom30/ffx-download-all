@@ -22,8 +22,8 @@ const downloadMap = new Map();
 const downloadPageUrlMap = new Map();
 let mainTabId = 0;
 
+let categoryMap = new Map();
 let categoryListToDo = new Map();
-let categoryPathMap = new Map();
 let categoryListProcessing = new Map();
 let categoryListDone = new Map();
 let savingCategoriesOnGoing = false;
@@ -33,17 +33,17 @@ const savingCategoriesIntervalId = setInterval(() => {
         console.log("processing category ");
     } else if (categoryListToDo.size > 0) {
         savingCategoriesOnGoing = true;
-        const catToDo = categoryListToDo.keys().next().value;
-        const linkToBeClicked = categoryListToDo.values().next().value;
-        console.log("linkToBeClicked", linkToBeClicked);
-        console.log("processing category " + catToDo);
-        console.log("category path : " + categoryPathMap.get(linkToBeClicked));
-        categoryListProcessing.set(catToDo, categoryListToDo.get(catToDo));
-        categoryListToDo.delete(catToDo);
+        const catIdToDo = categoryListToDo.keys().next().value;
+        const category = categoryMap.get(catIdToDo);
+        console.log("processing category");
+        console.dir(category);
+        categoryListProcessing.set(catIdToDo, null);
+        categoryListToDo.delete(catIdToDo);
         chrome.tabs.sendMessage(mainTabId, {
-            name: catToDo,
+            catId: catIdToDo,
             command: "save-category",
-            linkDataId: linkToBeClicked,
+            linkDataId: category.linkDataId,
+            name: category.name,
         }).then().catch((e) => console.log(e));
     } else {
         console.log("no category to process");
@@ -110,13 +110,19 @@ let func = ((message, sender, sendResponse) => {
         console.log(message);
         mainTabId = message.tabId;
         console.log("mainTabId is " + mainTabId);
-        categoryListToDo.set(message.name, message.linkDataId);
-        categoryPathMap.set(message.linkDataId, message.path);
-        // savingCategoriesOnGoing = true;
+        const catId = self.crypto.randomUUID();
+        console.log("adding new cat to list : " + catId + " " + message.name);
+        const category = {
+            name: message.name,
+            linkDataId: message.linkDataId,
+            path: message.path
+        };
+        categoryMap.set(catId, category);
+        categoryListToDo.set(catId, null);
     } else if (message.command === "save-category-done") {
         console.log("receive end for category " + message.name);
-        categoryListDone.set(message.name, categoryListProcessing.get(message.name));
-        categoryListProcessing.delete(message.name);
+        categoryListDone.set(message.catId, null);
+        categoryListProcessing.delete(message.catId);
     }
 });
 chrome.runtime.onMessage.addListener(func);

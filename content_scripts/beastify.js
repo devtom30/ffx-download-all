@@ -225,13 +225,13 @@
     } else if (request.command === "save-category") {
       console.log("save-category " + request.name);
       const link = document.querySelectorAll('[data-id="' + request.linkDataId + '"]')[0];
-      console.log("link");
-      console.log(link);
+      console.log("link : " + link);
       link.click();
       setTimeout(() => {
         saveCurrentCategoryPages();
         chrome.runtime.sendMessage({
           command: "save-category-done",
+          catId: request.catId,
           name: request.name
         });
       }, 1000);
