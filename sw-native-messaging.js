@@ -1,8 +1,11 @@
 console.log("sw-native-messaging.js");
 
+let server_url = "http://localhost:3000";
+const POST_TASK_URL = server_url + "/task";
+
 let message;
 let port = null;
-connect();
+//connect();
 // sendNativeMessage("ready?");
 
 let onCreated = (tab) => {
@@ -73,7 +76,17 @@ let func = ((message, sender, sendResponse) => {
             body: message.body,
             head: message.head
         };
-        sendNativeMessageTask(task);
+        //sendNativeMessageTask(task);
+        fetch(POST_TASK_URL, {
+            method: "POST",
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(task)
+        }).then(res => {
+            console.log("Request complete! response:", res);
+        }).catch((e) => {
+            console.log("error occurred:", e.message);
+            console.error(e);
+        });
     } else if (message.command === "just-open-page") {
         console.log("command just-open-page received");
         console.log(message);
